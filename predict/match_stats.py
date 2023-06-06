@@ -300,12 +300,9 @@ FROM (
 ### Public queries / methods
 ###
 
-def team_game_summary_query(): 
+def team_game_summary_query():
     """ Query that returns query statistics for both teams in a game. """
-    if _TOUCH_TABLE:
-        return _TEAM_GAME_SUMMARY_CORRECTED
-    else:
-        return GAME_SUMMARY
+    return _TEAM_GAME_SUMMARY_CORRECTED if _TOUCH_TABLE else GAME_SUMMARY
   
 def match_goals_table():
     """ Returns the name of a table with goals scored per match. """

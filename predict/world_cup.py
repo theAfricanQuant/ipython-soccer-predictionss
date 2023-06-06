@@ -43,12 +43,11 @@ def _drop_unbalanced_matches(data):
                 keep.append(False)
                 index += 1
                 skipped = True
-             
+
         if skipped:
             pass
         elif data.iloc[index]['matchid'] == data.iloc[index+1]['matchid']:
-            keep.append(True)
-            keep.append(True)
+            keep.extend((True, True))
             index += 2
         else:
             keep.append(False)
@@ -75,11 +74,11 @@ def _splice(data):
     """ Splice both rows representing a game into a single one. """
     data = data.copy()
     opp = data.copy()
-    opp_cols = ['opp_%s' % (col,) for col in opp.columns]
+    opp_cols = [f'opp_{col}' for col in opp.columns]
     opp.columns = opp_cols
     opp = opp.apply(_swap_pairwise)
     del opp['opp_is_home']
-    
+
     return data.join(opp)
 
 
@@ -95,9 +94,7 @@ def split(data, test_proportion=0.4):
         raise Exception('Unexpected data length')
     while len(train_vec) < len(data):
         rnd = random.random()
-        train_vec.append(rnd > test_proportion) 
-        train_vec.append(rnd > test_proportion)
-            
+        train_vec.extend((rnd > test_proportion, rnd > test_proportion))
     test_vec = [not val for val in train_vec]
     train = data[train_vec]
     test = data[test_vec]
@@ -236,10 +233,7 @@ def _standardize_col(col):
     """
     std = np.std(col)
     mean = np.mean(col)
-    if abs(std) > 0.001:
-        return col.apply(lambda val: (val - mean)/std)
-    else:
-        return col
+    return col.apply(lambda val: (val - mean)/std) if abs(std) > 0.001 else col
 
 
 def _standardize(data):
@@ -316,7 +310,7 @@ def extract_predictions(data, predictions):
 
     results['expected'] = pd.Series(expected_winner)
 
-    if len(points) > 0:
+    if points:
         winners = []
         for game in xrange(len(results)):
             row = results.iloc[game]
@@ -344,16 +338,15 @@ def _check_data(data):
     op_teams = data['op_teamid']
     while i < len(data) - 1:
         if matches.iloc[i] != matches.iloc[i + 1]:
-            raise Exception('Match mismatch: %s vs %s ' % (
-                            matches.iloc[i], matches.iloc[i + 1]))
+            raise Exception(f'Match mismatch: {matches.iloc[i]} vs {matches.iloc[i + 1]} ')
         if teams.iloc[i] != op_teams.iloc[i + 1]:
-            raise Exception('Team mismatch: match %s team %s vs %s' % (
-                            matches.iloc[i], teams.iloc[i], 
-                            op_teams.iloc[i + 1]))
+            raise Exception(
+                f'Team mismatch: match {matches.iloc[i]} team {teams.iloc[i]} vs {op_teams.iloc[i + 1]}'
+            )
         if teams.iloc[i + 1] != op_teams.iloc[i]:
-            raise Exception('Team mismatch: match %s team %s vs %s' % (
-                            matches.iloc[i], teams.iloc[i + 1], 
-                            op_teams.iloc[i]))
+            raise Exception(
+                f'Team mismatch: match {matches.iloc[i]} team {teams.iloc[i + 1]} vs {op_teams.iloc[i]}'
+            )
         i += 2
 
 

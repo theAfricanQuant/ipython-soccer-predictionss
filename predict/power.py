@@ -95,7 +95,7 @@ def _build_power(games, outcomes, coerce_fn, acc=0.0001, alpha=1.0, snap=True):
     param_range = max_param - min_param
     if len(params) == 0 or param_range < 0.0001:
         return None
-    
+
     params = params.sub(min_param)
     params = params.div(param_range)
     qqs = np.percentile(params, [20, 40, 60, 80])
@@ -105,12 +105,8 @@ def _build_power(games, outcomes, coerce_fn, acc=0.0001, alpha=1.0, snap=True):
             if (qqs[idx] > val):
                 return idx * 0.25
         return 1.0
-      
-    if snap:
-        # Snap power data to rough quartiles.
-        return params.apply(_snap).to_dict()
-    else:
-        return params.to_dict()
+
+    return params.apply(_snap).to_dict() if snap else params.to_dict()
 
 
 def _get_power_map(competition, competition_data, col, coerce_fn):
